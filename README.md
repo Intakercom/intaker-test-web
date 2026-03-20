@@ -19,6 +19,15 @@ A React-based project management frontend with sprint boards, task tracking, tea
 
 ## Getting started
 
+### Option 1: Docker Compose (Recommended)
+
+
+```bash
+docker-compose -p intaker-test-web up --build -d
+```
+
+### Option 2: Local Development
+
 ```sh
 # Install dependencies
 npm install
