@@ -172,6 +172,18 @@ export interface TaskDto {
   updatedAtUtc: string | null;
 }
 
+export interface TaskHistoryDto {
+  id: string;
+  taskId: string;
+  userId: string;
+  userName: string;
+  changeType: string;
+  fieldName: string | null;
+  oldValue: string | null;
+  newValue: string | null;
+  createdAtUtc: string;
+}
+
 // --- Task endpoints ---
 
 export async function createTask(data: {
@@ -220,6 +232,10 @@ export async function updateTaskStatus(
     method: "PATCH",
     body: JSON.stringify({ status }),
   });
+}
+
+export async function getTaskHistory(taskId: string): Promise<TaskHistoryDto[]> {
+  return apiRequest<TaskHistoryDto[]>(`/api/Tasks/${taskId}/history`);
 }
 
 // --- Team types ---

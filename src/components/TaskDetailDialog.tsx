@@ -7,6 +7,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,11 +37,14 @@ import {
   getTask,
   updateTask,
   deleteTask,
+  getTaskHistory,
   type TaskDto,
+  type TaskHistoryDto,
   type TeamMemberDto,
   type ErrorResponse,
 } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { TaskHistoryTimeline } from "./TaskHistoryTimeline";
 
 function getInitials(name: string | null): string {
   if (!name) return "?";
@@ -76,11 +80,14 @@ export function TaskDetailDialog({
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", storyPoints: null as number | null, assigneeId: "" });
+  const [history, setHistory] = useState<TaskHistoryDto[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   useEffect(() => {
     if (!taskId || !open) {
       setTask(null);
       setEditing(false);
+      setHistory([]);
       return;
     }
     setLoading(true);
@@ -104,6 +111,22 @@ export function TaskDetailDialog({
         onOpenChange(false);
       })
       .finally(() => setLoading(false));
+  }, [taskId, open]);
+
+  useEffect(() => {
+    if (!taskId || !open) return;
+    setLoadingHistory(true);
+    getTaskHistory(taskId)
+      .then((h) => setHistory(h))
+      .catch((err) => {
+        const apiErr = err as ErrorResponse;
+        toast({
+          variant: "destructive",
+          title: "Failed to load history",
+          description: apiErr.message || "History unavailable.",
+        });
+      })
+      .finally(() => setLoadingHistory(false));
   }, [taskId, open]);
 
   const handleSave = async () => {
@@ -167,7 +190,7 @@ export function TaskDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className="max-w-2xl">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -269,55 +292,72 @@ export function TaskDetailDialog({
               <DialogTitle className="pr-20">{task.title}</DialogTitle>
               <DialogDescription>Task details</DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-2">
-              {task.description && (
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground mb-1">Description</p>
-                  <div className="max-h-48 overflow-y-auto pr-1">
-                    <p className="text-sm whitespace-pre-wrap">{task.description}</p>
-                  </div>
-                </div>
-              )}
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <p className="font-medium text-muted-foreground mb-1">Status</p>
-                  <p>{statusLabel}</p>
-                </div>
-                <div>
-                  <p className="font-medium text-muted-foreground mb-1">Story Points</p>
-                  <p>{task.storyPoints !== null ? task.storyPoints : "-"}</p>
-                </div>
-                <div>
-                  <p className="font-medium text-muted-foreground mb-1">Assignee</p>
-                  {assignee ? (
-                    <div className="flex items-center gap-1.5">
-                      <Avatar className="h-5 w-5">
-                        <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
-                          {getInitials(`${assignee.firstName} ${assignee.lastName}`)}
-                        </AvatarFallback>
-                      </Avatar>
-                      <span>
-                        {assignee.firstName} {assignee.lastName}
-                      </span>
-                    </div>
-                  ) : task.assigneeName ? (
-                    <span>{task.assigneeName}</span>
-                  ) : (
-                    <span className="text-muted-foreground italic">Unassigned</span>
-                  )}
-                </div>
-                <div>
-                  <p className="font-medium text-muted-foreground mb-1">Created</p>
-                  <p>{new Date(task.createdAtUtc).toLocaleString()}</p>
-                </div>
-                {task.updatedAtUtc && (
+            <Tabs defaultValue="details" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="details">Details</TabsTrigger>
+                <TabsTrigger value="history">History</TabsTrigger>
+              </TabsList>
+              <TabsContent value="details" className="space-y-4 py-2">
+                {task.description && (
                   <div>
-                    <p className="font-medium text-muted-foreground mb-1">Updated</p>
-                    <p>{new Date(task.updatedAtUtc).toLocaleString()}</p>
+                    <p className="text-sm font-medium text-muted-foreground mb-1">Description</p>
+                    <div className="max-h-48 overflow-y-auto pr-1">
+                      <p className="text-sm whitespace-pre-wrap">{task.description}</p>
+                    </div>
                   </div>
                 )}
-              </div>
-            </div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="font-medium text-muted-foreground mb-1">Status</p>
+                    <p>{statusLabel}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-muted-foreground mb-1">Story Points</p>
+                    <p>{task.storyPoints !== null ? task.storyPoints : "-"}</p>
+                  </div>
+                  <div>
+                    <p className="font-medium text-muted-foreground mb-1">Assignee</p>
+                    {assignee ? (
+                      <div className="flex items-center gap-1.5">
+                        <Avatar className="h-5 w-5">
+                          <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                            {getInitials(`${assignee.firstName} ${assignee.lastName}`)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span>
+                          {assignee.firstName} {assignee.lastName}
+                        </span>
+                      </div>
+                    ) : task.assigneeName ? (
+                      <span>{task.assigneeName}</span>
+                    ) : (
+                      <span className="text-muted-foreground italic">Unassigned</span>
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-medium text-muted-foreground mb-1">Created</p>
+                    <p>{new Date(task.createdAtUtc).toLocaleString()}</p>
+                  </div>
+                  {task.updatedAtUtc && (
+                    <div>
+                      <p className="font-medium text-muted-foreground mb-1">Updated</p>
+                      <p>{new Date(task.updatedAtUtc).toLocaleString()}</p>
+                    </div>
+                  )}
+                </div>
+              </TabsContent>
+              <TabsContent value="history" className="py-2">
+                {loadingHistory ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : (
+                  <div className="max-h-[400px] overflow-y-auto pr-2">
+                    <TaskHistoryTimeline history={history} />
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
             <DialogFooter className="gap-2 sm:gap-0">
               <AlertDialog>
                 <AlertDialogTrigger asChild>
