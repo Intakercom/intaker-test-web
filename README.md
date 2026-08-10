@@ -26,6 +26,12 @@ A React-based project management frontend with sprint boards, task tracking, tea
 docker-compose -p intaker-test-web up --build -d
 ```
 
+**Stop services:**
+
+```bash
+docker-compose -p intaker-test-web down
+```
+
 ### Option 2: Local Development
 
 ```sh
