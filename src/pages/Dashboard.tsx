@@ -91,7 +91,14 @@ const TaskCard = React.forwardRef<
             onClick={onClick}
           >
             <CardContent className="p-3">
-              <p className="text-sm font-medium leading-snug">{task.title}</p>
+              <div className="flex items-start justify-between gap-2">
+                <p className="text-sm font-medium leading-snug flex-1">{task.title}</p>
+                {task.storyPoints !== null && (
+                  <Badge variant="outline" className="text-xs font-semibold shrink-0">
+                    {task.storyPoints}
+                  </Badge>
+                )}
+              </div>
               <div className="mt-2 flex items-center gap-1.5">
                 {task.assigneeName ? (
                   <>
@@ -657,6 +664,35 @@ const Dashboard = () => {
         <div className="px-6 py-2 bg-secondary/60 border-b flex items-center gap-2">
           <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Team</span>
           <span className="text-sm font-medium text-foreground">{selectedSprint.teamName}</span>
+        </div>
+      )}
+
+      {/* Story Points Progress */}
+      {board && (board.totalStoryPoints > 0) && (
+        <div className="px-6 py-3 bg-card/30 border-b">
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-medium">Story Points</span>
+              <span className="text-xs text-muted-foreground">
+                {board.completedStoryPoints} / {board.totalStoryPoints} completed
+              </span>
+            </div>
+            <span className="text-sm font-semibold text-primary">
+              {board.totalStoryPoints > 0
+                ? Math.round((board.completedStoryPoints / board.totalStoryPoints) * 100)
+                : 0}%
+            </span>
+          </div>
+          <div className="w-full bg-secondary/40 rounded-full h-2.5 overflow-hidden">
+            <div
+              className="bg-primary h-full rounded-full transition-all duration-300"
+              style={{
+                width: `${board.totalStoryPoints > 0
+                  ? (board.completedStoryPoints / board.totalStoryPoints) * 100
+                  : 0}%`
+              }}
+            />
+          </div>
         </div>
       )}
 

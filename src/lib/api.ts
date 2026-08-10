@@ -109,6 +109,7 @@ export interface SprintDto {
 export interface BoardTaskDto {
   id: string;
   title: string;
+  storyPoints: number | null;
   assigneeId: string | null;
   assigneeName: string | null;
 }
@@ -119,6 +120,8 @@ export interface SprintBoardDto {
   toDo: BoardTaskDto[];
   inProgress: BoardTaskDto[];
   done: BoardTaskDto[];
+  totalStoryPoints: number;
+  completedStoryPoints: number;
 }
 
 // --- Sprint endpoints ---
@@ -159,6 +162,7 @@ export interface TaskDto {
   id: string;
   title: string;
   description: string | null;
+  storyPoints: number | null;
   status: string;
   assigneeId: string | null;
   assigneeName: string | null;
@@ -173,6 +177,7 @@ export interface TaskDto {
 export async function createTask(data: {
   title: string;
   description?: string | null;
+  storyPoints?: number | null;
   assigneeId?: string | null;
   sprintId: string;
 }): Promise<TaskDto> {
@@ -191,6 +196,7 @@ export async function updateTask(
   data: {
     title: string;
     description?: string | null;
+    storyPoints?: number | null;
     assigneeId?: string | null;
   }
 ): Promise<TaskDto> {

@@ -75,7 +75,7 @@ export function TaskDetailDialog({
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [form, setForm] = useState({ title: "", description: "", assigneeId: "" });
+  const [form, setForm] = useState({ title: "", description: "", storyPoints: null as number | null, assigneeId: "" });
 
   useEffect(() => {
     if (!taskId || !open) {
@@ -90,6 +90,7 @@ export function TaskDetailDialog({
         setForm({
           title: t.title,
           description: t.description || "",
+          storyPoints: t.storyPoints,
           assigneeId: t.assigneeId || "",
         });
       })
@@ -112,6 +113,7 @@ export function TaskDetailDialog({
       const updated = await updateTask(taskId, {
         title: form.title.trim(),
         description: form.description.trim() || null,
+        storyPoints: form.storyPoints,
         assigneeId: form.assigneeId || null,
       });
       setTask(updated);
@@ -196,6 +198,25 @@ export function TaskDetailDialog({
                 />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="edit-task-story-points">Story Points</Label>
+                <Select
+                  value={form.storyPoints === null ? "-" : String(form.storyPoints)}
+                  onValueChange={(val) => setForm((f) => ({ ...f, storyPoints: val === "-" ? null : Number(val) }))}
+                >
+                  <SelectTrigger id="edit-task-story-points">
+                    <SelectValue placeholder="-" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="-">-</SelectItem>
+                    <SelectItem value="1">1</SelectItem>
+                    <SelectItem value="2">2</SelectItem>
+                    <SelectItem value="3">3</SelectItem>
+                    <SelectItem value="4">4</SelectItem>
+                    <SelectItem value="5">5</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="edit-task-assignee">Assignee</Label>
                 <Select
                   value={form.assigneeId || "__none__"}
@@ -228,6 +249,7 @@ export function TaskDetailDialog({
                   setForm({
                     title: task.title,
                     description: task.description || "",
+                    storyPoints: task.storyPoints,
                     assigneeId: task.assigneeId || "",
                   });
                 }}
@@ -260,6 +282,10 @@ export function TaskDetailDialog({
                 <div>
                   <p className="font-medium text-muted-foreground mb-1">Status</p>
                   <p>{statusLabel}</p>
+                </div>
+                <div>
+                  <p className="font-medium text-muted-foreground mb-1">Story Points</p>
+                  <p>{task.storyPoints !== null ? task.storyPoints : "-"}</p>
                 </div>
                 <div>
                   <p className="font-medium text-muted-foreground mb-1">Assignee</p>
