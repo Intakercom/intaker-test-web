@@ -320,6 +320,8 @@ const Dashboard = () => {
 
     try {
       await updateTaskStatus(taskId, newStatus);
+      // Refresh board to update story points totals
+      fetchBoard();
     } catch (err) {
       setBoard(prev);
       const apiErr = err as ErrorResponse;
@@ -329,7 +331,7 @@ const Dashboard = () => {
         description: apiErr.message || "Please try again.",
       });
     }
-  }, [board, toast]);
+  }, [board, toast, fetchBoard]);
 
   const onDragEnd = useCallback((result: DropResult) => {
     const { source, destination, draggableId } = result;
